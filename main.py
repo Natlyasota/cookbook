@@ -2,40 +2,26 @@ import pprint
 pp = pprint.PrettyPrinter(indent=2)
 import os
 file_path = os.path.join(os.getcwd(), 'recipes.txt')
-
-def get_recipes(filename):
-    result = {}
-    with open(filename, encoding='utf-8') as recipes:
-        line = recipes.readline()
-        recipe_name = None
-        ingredient_count = -1
-        while line != '':
-            line = line.strip()
-            if recipe_name is None:
-                recipe_name = line
-                result[recipe_name] = []
-                line = recipes.readline()
-                continue
-            if ingredient_count < 0:
-                try:
-                    ingredient_count = int(line)
-                except ValueError as e:
-                    return {}
-            elif ingredient_count == 0:
-                recipe_name = None
-                ingredient_count = -1
-            else:
-                tmp_dict = dict(zip(
-                    ['ingredient_name', 'quantity', 'measure'],
-                    [x.strip() for x in line.split('|')]))
-                try:
-                    tmp_dict['quantity'] = int(tmp_dict.setdefault('quantity', 0))
-                except ValueError as e:
-                    return {}
-                result[recipe_name].append(tmp_dict)
-                ingredient_count -= 1
-            line = recipes.readline()
-    return result
+def get_recipes(file_name):
+    """Функция чтения файла + создание словаря нужного формата"""
+    cook_dict = {}
+    with open(file_name, encoding='utf-8') as file_work:
+        f = file_work.read().splitlines()
+        i = 0
+        while i < len(f):
+            dish = f[i]
+            ingr_count = int(f[i + 1])
+            ingr = []
+            for j in range(ingr_count):
+                temp_dict = {}
+                temp_dict['ingredient_name'] = f[i + 2].split('|')[0]
+                temp_dict['quantity'] = int(f[i + 2].split('|')[1])
+                temp_dict['measure'] = f[i + 2].split('|')[2]
+                ingr.append(temp_dict)
+                i += 1
+            cook_dict[dish] = ingr
+            i += 3
+    return cook_dict
 
 def get_shop_list_by_dishes(dishes, person_count, filename='recipes.txt'):
     result = {}
@@ -44,21 +30,16 @@ def get_shop_list_by_dishes(dishes, person_count, filename='recipes.txt'):
         for item in ingredient_list:
             ingredient_name = item['ingredient_name']
             ingredient_found = result.setdefault(ingredient_name,
-                                             {'measure': item['measure'],
-                                             'quantity': 0})
-            ingredient_found['quantity'] = ingredient_found['quantity'] + \
-            item['quantity'] * person_count
+                                                 {'measure': item['measure'],
+                                                  'quantity': 5})
+            ingredient_found['quantity'] = item['quantity'] * person_count
             result[ingredient_name] = ingredient_found
     return result
-
 def for_cookbook():
-        print('***** Книга рецептов *****')
-        cook_book = get_recipes('recipes.txt')
-        pp.pprint(cook_book)
-        print('\n***** Необходимые покупки для блюд *****')
-        pp.pprint(get_shop_list_by_dishes(['Омлет', \
-                                           'Запеченный картофель', 'Омлет', 'Омлет', 'Запеченный картофель'], 5))
-
-
+    cook_book = get_recipes('recipes.txt')
+    print('***** Книга рецептов *****')
+    pp.pprint(cook_book)
+    print('\n***** Необходимые покупки для блюд *****')
+    pp.pprint(get_shop_list_by_dishes(['Запеченный картофель', 'Омлет'], 2))
 if __name__ == "__main__":
-  for_cookbook()
+    for_cookbook()
